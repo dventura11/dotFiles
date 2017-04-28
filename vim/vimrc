@@ -1,0 +1,357 @@
+filetype off
+"let $GOPATH="~/gopath"
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'gmarik/Vundle.vim'
+" COLORS
+Plugin 'lifepillar/vim-solarized8'
+Plugin 'jacoborus/tender'
+Plugin 'elzr/vim-json'
+Plugin 'bling/vim-airline'
+Plugin 'vim-scripts/Align'
+Plugin 'tpope/vim-fugitive'
+Plugin 'danro/rename.vim'
+Plugin 'Lokaltog/vim-easymotion'
+Plugin 'tpope/vim-surround.git'
+Plugin 'bling/vim-bufferline'
+Plugin 'Shougo/neocomplete.vim'
+Plugin 'nathanaelkane/vim-indent-guides.git'
+Plugin 'scrooloose/nerdtree'
+Plugin 'scrooloose/nerdcommenter'
+Plugin 'L9'
+Plugin 'kien/ctrlp.vim'
+Plugin 'embear/vim-localvimrc'
+Plugin 'scrooloose/syntastic'
+Plugin 'b3niup/numbers.vim'
+Plugin 'tpope/vim-repeat'
+Plugin 'majutsushi/tagbar'
+Plugin 'fatih/vim-go'
+Plugin 'garyburd/go-explorer'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'nsf/gocode', {'rtp': 'vim/'}
+Plugin 'nelstrom/vim-visual-star-search'
+Plugin 'IN3D/vim-raml'
+Plugin 'artur-shaik/vim-javacomplete2'
+Plugin 'craigemery/vim-autotag'
+
+call vundle#end()
+filetype plugin indent on
+
+let mapleader = ','
+let g:CommandTMaxHeight=10
+let g:CommandTFileScanner = 'find'
+let g:localvimrc_whitelist='/Users/goreorto/Workspace/.*'
+
+let g:airline#extensions#tabline#enabled = 1
+" vim-go recommendation
+set nocursorcolumn
+syntax sync minlines=256
+set re=1
+set lazyredraw " faster macro execution
+set termguicolors
+set relativenumber
+set hidden
+set backupdir=/tmp
+set noswapfile
+set nowrap
+set clipboard=unnamed
+set ignorecase " WARNING: affect substitution
+set smartcase
+set autoread
+set ruler
+set noexpandtab
+set smarttab
+set shiftwidth=4
+set tabstop=4
+set softtabstop=4
+set ai
+set si
+set cmdheight=1
+"set showcmd
+set laststatus=2
+set scrolloff=10
+set title
+set wildignore=node_modules,bower_components,dev,public/releases
+syntax enable
+set list
+set listchars=tab:·\ ,trail:·
+set guifont=Inconsolata:h18
+"set foldmethod=syntax
+set foldmethod=indent
+set foldlevelstart=99
+set cursorline
+set showmatch
+set incsearch
+autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=red  ctermbg=3
+
+nnoremap <C-Left> :tabprevious<CR>
+nnoremap <C-Right> :tabnext<CR>
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
+
+func! DeleteTrailingWS()
+  exe "normal mz"
+  %s/\s\+$//ge
+  exe "normal `z"
+endfunc
+
+autocmd BufWrite * :call DeleteTrailingWS()
+
+autocmd VimEnter * if !argc() | NERDTree | endif
+autocmd VimEnter * if isdirectory(expand('<afile>')) | NERDTree | endif
+
+colorscheme tender
+
+" KEYBINDINGS
+map gn :bnext<CR>
+map gb :bprevious<CR>
+map <leader>n :NERDTreeToggle<CR>
+map <leader>p :TagbarToggle<CR>
+map <leader>t :CtrlP<CR>
+map <leader>h :NERDTreeTabsOpen<CR>
+
+" Delete buffer while keeping window layout (don't close buffer's windows).
+" Version 2008-11-18 from http://vim.wikia.com/wiki/VimTip165
+if v:version < 700 || exists('loaded_bclose') || &cp
+  finish
+endif
+let loaded_bclose = 1
+if !exists('bclose_multiple')
+  let bclose_multiple = 1
+endif
+
+" Display an error message.
+function! s:Warn(msg)
+  echohl ErrorMsg
+  echomsg a:msg
+  echohl NONE
+endfunction
+
+" BUFFER CLOSING
+" Command ':Bclose' executes ':bd' to delete buffer in current window.
+" The window will show the alternate buffer (Ctrl-^) if it exists,
+" or the previous buffer (:bp), or a blank buffer if no previous.
+" Command ':Bclose!' is the same, but executes ':bd!' (discard changes).
+" An optional argument can specify which buffer to close (name or number).
+function! s:Bclose(bang, buffer)
+  if empty(a:buffer)
+    let btarget = bufnr('%')
+  elseif a:buffer =~ '^\d\+$'
+    let btarget = bufnr(str2nr(a:buffer))
+  else
+    let btarget = bufnr(a:buffer)
+  endif
+  if btarget < 0
+    call s:Warn('No matching buffer for '.a:buffer)
+    return
+  endif
+  if empty(a:bang) && getbufvar(btarget, '&modified')
+    call s:Warn('No write since last change for buffer '.btarget.' (use :Bclose!)')
+    return
+  endif
+  " Numbers of windows that view target buffer which we will delete.
+  let wnums = filter(range(1, winnr('$')), 'winbufnr(v:val) == btarget')
+  if !g:bclose_multiple && len(wnums) > 1
+    call s:Warn('Buffer is in multiple windows (use ":let bclose_multiple=1")')
+    return
+  endif
+  let wcurrent = winnr()
+  for w in wnums
+    execute w.'wincmd w'
+    let prevbuf = bufnr('#')
+    if prevbuf > 0 && buflisted(prevbuf) && prevbuf != w
+      buffer #
+    else
+      bprevious
+    endif
+    if btarget == bufnr('%')
+      " Numbers of listed buffers which are not the target to be deleted.
+      let blisted = filter(range(1, bufnr('$')), 'buflisted(v:val) && v:val != btarget')
+      " Listed, not target, and not displayed.
+      let bhidden = filter(copy(blisted), 'bufwinnr(v:val) < 0')
+      " Take the first buffer, if any (could be more intelligent).
+      let bjump = (bhidden + blisted + [-1])[0]
+      if bjump > 0
+        execute 'buffer '.bjump
+      else
+        execute 'enew'.a:bang
+      endif
+    endif
+  endfor
+  execute 'bdelete'.a:bang.' '.btarget
+  execute wcurrent.'wincmd w'
+endfunction
+
+command! -bang -complete=buffer -nargs=? Bclose call s:Bclose('<bang>', '<args>')
+nnoremap <silent> <Leader>bd :Bclose<CR>
+nmap <Leader>f :%!python -m json.tool<CR>
+
+if has('mouse')
+  set mouse=a
+  if &term =~ "xterm" || &term =~ "screen"
+    " as of March 2013, this works:
+    set ttymouse=xterm2
+
+    " previously, I found that ttymouse was getting reset, so had
+    " to reapply it via an autocmd like this:
+    autocmd VimEnter,FocusGained,BufEnter * set ttymouse=xterm2
+  endif
+endif
+
+" CTRL-P
+let g:ctrlp_working_path_mode = 0
+let g:ctrlp_custom_ignore = {
+      \ 'dir':  '\v[\/]\.(git|hg|svn|sass)|dist|tmp$',
+      \ 'file': '\v\.(exe|so|dll)$',
+      \ 'link': 'some_bad_symbolic_links',
+      \ }
+let g:go_def_reuse_buffer = 1
+let g:go_fmt_command = "gofmt"
+let g:go_fmt_autosave = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_interfaces = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+let g:go_list_type = "quickfix"
+" Disable AutoComplPop.
+let g:acp_enableAtStartup = 0
+" Use neocomplete.
+let g:neocomplete#enable_at_startup = 1
+" Use smartcase.
+let g:neocomplete#enable_smart_case = 1
+" Set minimum syntax keyword length.
+let g:neocomplete#sources#syntax#min_keyword_length = 2
+let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
+inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+function! s:my_cr_function()
+  return (pumvisible() ? "\<C-y>" : "" ) . "\<CR>"
+  " For no inserting <CR> key.
+  "return pumvisible() ? "\<C-y>" : "\<CR>"
+endfunction
+" <TAB>: completion.
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+" <C-h>, <BS>: close popup and delete backword char.
+inoremap <expr><C-h> neocomplete#smart_close_popup()."\<C-h>"
+inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
+
+let g:syntastic_go_checkers = ['go', 'gofmt', 'golint', 'govet']
+let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_check_on_w = 1
+
+
+" DO NOT HL LARGE FILES
+autocmd BufWinEnter * if line2byte(line("$") + 1) > 1000000 | syntax clear | endif
+
+" NERDTREE
+let g:NERDTreeWinPos = "right"
+
+" GOLANG
+let g:tagbar_type_go = {
+      \ 'ctagstype' : 'go',
+      \ 'kinds'     : [
+      \ 'p:package',
+      \ 'i:imports:1',
+      \ 'c:constants',
+      \ 'v:variables',
+      \ 't:types',
+      \ 'n:interfaces',
+      \ 'w:fields',
+      \ 'e:embedded',
+      \ 'm:methods',
+      \ 'r:constructor',
+      \ 'f:functions'
+      \ ],
+      \ 'sro' : '.',
+      \ 'kind2scope' : {
+      \ 't' : 'ctype',
+      \ 'n' : 'ntype'
+      \ },
+      \ 'scope2kind' : {
+      \ 'ctype' : 't',
+      \ 'ntype' : 'n'
+      \ },
+      \ 'ctagsbin'  : 'gotags',
+      \ 'ctagsargs' : '-sort -silent'
+      \ }
+let g:NERDTreeWinPos = "left"
+let g:UltiSnipsExpandTrigger="<tab>"
+let g:ycm_key_list_select_completion = ['<C-j>']
+let g:ycm_key_list_previous_completion = ['<C-k>']
+
+let NERDTreeMapOpenInTab='<ENTER>'
+
+" Enable omni completion.
+autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
+" DO NOT HL LARGE FILES
+autocmd BufWinEnter * if line2byte(line("$") + 1) > 1000000 | syntax clear | endif
+
+" For conceal markers.
+if has('conceal')
+  set conceallevel=2 concealcursor=niv
+endif
+
+if executable('ag')
+  let g:ackprg = 'ag --vimgrep'
+endif
+
+execute pathogen#infect()
+syntax on
+syntax enable
+filetype plugin indent on
+
+set background=dark
+colorscheme solarized
+
+let g:syntastic_java_checkers=['javac']
+let g:syntastic_java_javac_config_file_enabled = 1
+
+:Helptags
+set autoread
+set smartindent
+set ts=2 sts=2 et
+
+set sw=2
+set autoindent
+
+augroup autoindent
+  au!
+  autocmd BufWritePre * :normal migg=G`i
+augroup End
+
+"java
+autocmd BufWritePre *.java :JCimportsAddMissing
+autocmd BufWritePre *.java :JCimportsRemoveUnused
+autocmd BufWritePre *.java :JCimportsSort
+
+let java_comment_strings=1
+let java_mark_braces_in_parens_as_errors=1
+let java_highlight_all=1
+let java_highlight_debug=1
+let java_ignore_javadoc=1
+let java_highlight_java_lang_ids=1
+let java_highlight_functions="style"
+let java_minlines = 150
+
+set tags=tags,./tags
+
+" c++
+let g:syntastic_cpp_compiler = 'g++'
+l
