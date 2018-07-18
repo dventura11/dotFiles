@@ -50,6 +50,9 @@ set backspace=2
 set number
 set laststatus=2
 set list
+set tabstop=2
+set shiftwidth=2
+set expandtab
 " set listchars=tab:\⁞\·
 " set listchars=tab:\→\
 set listchars=tab:\⁞\ 
@@ -105,11 +108,13 @@ let g:airline_theme = 'cool'
 let g:NERDSpaceDelims = 1
 " Use compact syntax for prettified multi-line comments
 let g:NERDCompactSexyComs = 1
-" Align line-wise comment delimiters flush left instead of following code indentation
+" Align line-wise comment delimiters flush left instead of following code
+" indentation
 let g:NERDDefaultAlign = 'left'
 " Set a language to use its alternate delimiters by default
 let g:NERDAltDelims_java = 1
-" Allow commenting and inverting empty lines (useful when commenting a region)
+" Allow commenting and inverting empty lines (useful when commenting a
+" region)
 let g:NERDCommentEmptyLines = 1
 " Enable trimming of trailing whitespace when uncommenting
 let g:NERDTrimTrailingWhitespace = 1
@@ -137,7 +142,7 @@ let g:neocomplete#sources#syntax#min_keyword_length = 2
 " inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
 " function! s:my_cr_function()
   " return (pumvisible() ? "\<C-y>" : "" ) . "\<CR>"
-" endfunction
+  " endfunction
 " inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 " inoremap <expr><C-h> neocomplete#smart_close_popup()."\<C-h>"
 " inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
