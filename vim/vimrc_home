@@ -1,5 +1,5 @@
-filetype off                  " required
-
+filetype off                  
+" required
 " vundle
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
@@ -24,6 +24,13 @@ Plugin 'sjl/splice.vim'
 Plugin 'Shougo/neocomplete.vim'
 Plugin 'artur-shaik/vim-javacomplete2'
 Plugin 'tfnico/vim-gradle'
+Plugin 'Shougo/vimproc.vim'
+Plugin 'Quramy/tsuquyomi'
+Plugin 'leafgarland/typescript-vim'
+Plugin 'Quramy/vim-js-pretty-template'
+Plugin 'jason0x43/vim-js-indent'
+Plugin 'Quramy/vim-dtsm'
+Plugin 'mhartington/vim-typings'
 " Plugin 'airblade/vim-rooter'
 " Plugin 'jacob-ogre/vim-syncr'
 " All of your Plugins must be added before the following line
@@ -38,7 +45,7 @@ nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 let mapleader = ","
-set clipboard=unnamedplus
+set clipboard=unnamed
 set backspace=2
 set number
 set laststatus=2
